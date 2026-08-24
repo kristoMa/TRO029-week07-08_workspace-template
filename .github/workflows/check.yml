@@ -41,21 +41,21 @@ jobs:
           # Kontrolli workspace juurkausta
           if [ -d "ros2_ws" ]; then
             echo "✅ Workspace 'ros2_ws' olemas"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: Workspace 'ros2_ws' puudub"
             echo "   💡 Loo see: mkdir -p ros2_ws/src"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           fi
           
           # Kontrolli src kausta
           if [ -d "ros2_ws/src" ]; then
             echo "✅ Source kaust 'ros2_ws/src' olemas"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: Source kaust puudub"
             echo "   💡 Loo see: mkdir -p ros2_ws/src"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           fi
           
           echo ""
@@ -87,12 +87,12 @@ jobs:
           # Kontrolli paketi kausta
           if [ -d "$PKG_PATH" ]; then
             echo "✅ Pakett '$PKG_NAME' olemas"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: Pakett '$PKG_NAME' puudub"
             echo "   📍 Oodatud asukoht: $PKG_PATH"
             echo "   💡 Loo see: cd ros2_ws/src && ros2 pkg create --build-type ament_python --license Apache-2.0 --node-name my_node $PKG_NAME"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
             echo "PACKAGE_ERRORS=$ERRORS" >> $GITHUB_ENV
             exit 1
           fi
@@ -100,28 +100,28 @@ jobs:
           # Kontrolli package.xml
           if [ -f "$PKG_PATH/package.xml" ]; then
             echo "✅ Fail 'package.xml' olemas"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: 'package.xml' puudub"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           fi
           
           # Kontrolli setup.py
           if [ -f "$PKG_PATH/setup.py" ]; then
             echo "✅ Fail 'setup.py' olemas"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: 'setup.py' puudub"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           fi
           
           # Kontrolli paketi kausta struktuuri
           if [ -d "$PKG_PATH/$PKG_NAME" ]; then
             echo "✅ Python paketi kaust olemas: $PKG_NAME/$PKG_NAME"
-            ((SUCCESS++))
+            SUCCESS=$((SUCCESS+1))
           else
             echo "❌ VIGA: Python paketi kaust puudub"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           fi
           
           echo ""
@@ -159,22 +159,22 @@ jobs:
           
           if [ ! -f "$PKG_PATH/package.xml" ]; then
             echo "❌ VIGA: package.xml puudub - ei saa metaandmeid kontrollida"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           else
             # Kontrolli description
             if grep -q "<description>.*TODO.*</description>" "$PKG_PATH/package.xml" || \
                grep -q "<description></description>" "$PKG_PATH/package.xml"; then
               echo "❌ VIGA: package.xml description on täitmata või sisaldab 'TODO'"
               echo "   💡 Muuda: <description>Minu ROS2 pakett nädalaks 7-8</description>"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             else
               DESC=$(grep -oP '(?<=<description>).*?(?=</description>)' "$PKG_PATH/package.xml" | head -n1)
               if [ -n "$DESC" ] && [ "$DESC" != " " ]; then
                 echo "✅ Description täidetud: '$DESC'"
-                ((SUCCESS++))
+                SUCCESS=$((SUCCESS+1))
               else
                 echo "❌ VIGA: Description on tühi"
-                ((ERRORS++))
+                ERRORS=$((ERRORS+1))
               fi
             fi
             
@@ -183,16 +183,16 @@ jobs:
                grep -q 'maintainer email="">.*</maintainer>' "$PKG_PATH/package.xml"; then
               echo "❌ VIGA: package.xml maintainer_email on täitmata või sisaldab 'TODO'"
               echo "   💡 Muuda: <maintainer email=\"sinu.nimi@email.com\">Sinu Nimi</maintainer>"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             else
               MAINT=$(grep -oP '(?<=<maintainer email=").*?(?=">)' "$PKG_PATH/package.xml" | head -n1)
               if [ -n "$MAINT" ] && [ "$MAINT" != " " ] && [[ "$MAINT" == *"@"* ]]; then
                 echo "✅ Maintainer email täidetud: '$MAINT'"
-                ((SUCCESS++))
+                SUCCESS=$((SUCCESS+1))
               else
                 echo "❌ VIGA: Maintainer email on vale formaadis või tühi"
                 echo "   💡 Peab sisaldama @-märki"
-                ((ERRORS++))
+                ERRORS=$((ERRORS+1))
               fi
             fi
             
@@ -200,19 +200,19 @@ jobs:
             MAINT_NAME=$(grep -oP '(?<=>).*?(?=</maintainer>)' "$PKG_PATH/package.xml" | head -n1)
             if [ -n "$MAINT_NAME" ] && [ "$MAINT_NAME" != " " ] && [ "$MAINT_NAME" != "TODO" ]; then
               echo "✅ Maintainer nimi täidetud: '$MAINT_NAME'"
-              ((SUCCESS++))
+              SUCCESS=$((SUCCESS+1))
             else
               echo "❌ VIGA: Maintainer nimi on täitmata või 'TODO'"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             fi
             
             # Kontrolli license
             if grep -q "<license>Apache-2.0</license>" "$PKG_PATH/package.xml"; then
               echo "✅ License on korrektne: Apache-2.0"
-              ((SUCCESS++))
+              SUCCESS=$((SUCCESS+1))
             else
               echo "⚠️ HOIATUS: License ei ole Apache-2.0 (soovitatud)"
-              ((WARNINGS++))
+              WARNINGS=$((WARNINGS+1))
             fi
           fi
           
@@ -227,22 +227,22 @@ jobs:
           
           if [ ! -f "$PKG_PATH/setup.py" ]; then
             echo "❌ VIGA: setup.py puudub - ei saa metaandmeid kontrollida"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
           else
             # Kontrolli description
             if grep -q "description='TODO:" "$PKG_PATH/setup.py" || \
                grep -q "description=''" "$PKG_PATH/setup.py"; then
               echo "❌ VIGA: setup.py description on täitmata või sisaldab 'TODO'"
               echo "   💡 Muuda: description='Minu ROS2 pakett nädalaks 7-8',"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             else
               DESC=$(grep -oP "description='\K[^']+" "$PKG_PATH/setup.py" | head -n1)
               if [ -n "$DESC" ] && [ "$DESC" != " " ]; then
                 echo "✅ Description täidetud: '$DESC'"
-                ((SUCCESS++))
+                SUCCESS=$((SUCCESS+1))
               else
                 echo "❌ VIGA: Description on tühi"
-                ((ERRORS++))
+                ERRORS=$((ERRORS+1))
               fi
             fi
             
@@ -250,15 +250,15 @@ jobs:
             if grep -q "maintainer='TODO" "$PKG_PATH/setup.py" || \
                grep -q "maintainer=''" "$PKG_PATH/setup.py"; then
               echo "❌ VIGA: setup.py maintainer on täitmata"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             else
               MAINT=$(grep -oP "maintainer='\K[^']+" "$PKG_PATH/setup.py" | head -n1)
               if [ -n "$MAINT" ] && [ "$MAINT" != " " ]; then
                 echo "✅ Maintainer täidetud: '$MAINT'"
-                ((SUCCESS++))
+                SUCCESS=$((SUCCESS+1))
               else
                 echo "❌ VIGA: Maintainer on tühi"
-                ((ERRORS++))
+                ERRORS=$((ERRORS+1))
               fi
             fi
             
@@ -266,25 +266,25 @@ jobs:
             if grep -q "maintainer_email='TODO" "$PKG_PATH/setup.py" || \
                grep -q "maintainer_email=''" "$PKG_PATH/setup.py"; then
               echo "❌ VIGA: setup.py maintainer_email on täitmata"
-              ((ERRORS++))
+              ERRORS=$((ERRORS+1))
             else
               EMAIL=$(grep -oP "maintainer_email='\K[^']+" "$PKG_PATH/setup.py" | head -n1)
               if [ -n "$EMAIL" ] && [ "$EMAIL" != " " ] && [[ "$EMAIL" == *"@"* ]]; then
                 echo "✅ Maintainer email täidetud: '$EMAIL'"
-                ((SUCCESS++))
+                SUCCESS=$((SUCCESS+1))
               else
                 echo "❌ VIGA: Maintainer email on vale formaadis"
-                ((ERRORS++))
+                ERRORS=$((ERRORS+1))
               fi
             fi
             
             # Kontrolli license
             if grep -q "license='Apache-2.0'" "$PKG_PATH/setup.py"; then
               echo "✅ License on korrektne: Apache-2.0"
-              ((SUCCESS++))
+              SUCCESS=$((SUCCESS+1))
             else
               echo "⚠️ HOIATUS: License ei ole Apache-2.0 (soovitatud)"
-              ((WARNINGS++))
+              WARNINGS=$((WARNINGS+1))
             fi
           fi
           
